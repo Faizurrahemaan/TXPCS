@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TEAM XTINCT SECURE CHAT SERVER</title>
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+        }
+        #chat {
+            background-color: #444;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #messages {
+            margin-bottom: 10px;
+            height: 200px;
+            overflow-y: scroll;
+            padding: 10px;
+            background-color: #555;
+        }
+        #message, #name {
+            width: 70%;
+            padding: 8px;
+            background-color: #777;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 8px;
+            background-color: #777;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="name" placeholder="Your Name">
+        <input type="text" id="message" placeholder="Type a message...">
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="changeName()">Change Name</button>
+        <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    </div>
+
+    <script>
+        let isDarkMode = true;
+        let userID;
+
+        function fetchMessages() {
+            fetch('/get_messages')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('messages').innerHTML = data.messages.join('<br>');
+                });
+        }
+
+        function fetchUsers() {
+            fetch('/get_users')
+                .then(response => response.json())
+                .then(data => {
+                    // Handle user names retrieved from the server
+                    // For example, you can display them in the UI or perform operations as needed
+                });
+        }
+
+        function sendMessage() {
+            const name = document.getElementById('name').value || 'Anonymous';
+            const message = document.getElementById('message').value;
+            fetch('/send_message', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'message': message,
+                    'user_id': userID
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(() => {
+                fetchMessages();
+            });
+        }
+
+        function changeName() {
+            const newName = document.getElementById('name').value || 'Anonymous';
+            fetch('/change_name', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'user_id': userID,
+                    'new_name': newName
+                }),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(() => {
+                fetchUsers();
+            });
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            const body = document.querySelector('body');
+            const chat = document.getElementById('chat');
+            if (isDarkMode) {
+                body.style.backgroundColor = '#333';
+                body.style.color = '#fff';
+                chat.style.backgroundColor = '#444';
+            } else {
+                body.style.backgroundColor = '#fff';
+                body.style.color = '#333';
+                chat.style.backgroundColor = '#eee';
+            }
+        }
+
+        fetchMessages();
+        setInterval(fetchMessages, 3000); // Fetch messages every 3 seconds
+        fetchUsers(); // Fetch user information initially
+    </script>
+</body>
+</html>
